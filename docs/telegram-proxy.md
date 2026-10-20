@@ -63,3 +63,18 @@ Telegram HTTP 302 при включённой TLS verification. Временны
 
 [HTTPX proxies and mounts](https://www.python-httpx.org/advanced/proxies/) —
 официальный контракт транспорта; закреплённая версия проекта httpx 0.28.1.
+
+## Живая приёмка
+
+2026-10-20 успешно развёрнут коммит `6acf0c4aee589b165c7f4c5696434300a6addeb4`.
+Оба production-контейнера (`bot`, `telegram-proxy`) healthy, restart count 0.
+Проверены свежий polling heartbeat, getMe через ту же фабрику HTTPX и закрытый
+туннель, SQLite integrity_check=ok, uid=10001, SSH key/known_hosts/bot.env mode 0600.
+Публичные ports отсутствуют. Логи приложения при приёмке пусты.
+Внешние публикации и сообщения не создавались этой проверкой.
+
+Локально: 152 tests, 100% lines / 98.91% branches всего relaypost/;
+network.py — 100% строк и ветвей. GitHub run 39390128217 прошёл Backend и
+Quality gate, включая сборку bot и tunnel targets. Артефакт и current symlink
+на VPS указывают на проверенный коммит; последующие изменения этой записи
+не требуют перезапуска приложения.

@@ -61,3 +61,9 @@ published ports, image build в Backend job, SSH+TLS preflight в deploy до о
 writers. Unit tests проверяют Telegram-only routing для API/media, запрет fallback,
 закрытие clients и sanitized errors. Deployment harness включает preflight failure.
 Приватные SSH keys не нужны PR tests и не попадают в image/build context.
+
+Live proxy acceptance completed on 2026-10-20 at commit 6acf0c4:
+bot+tunnel healthy / zero restarts, actual getMe via the mounted Telegram
+transport, fresh getUpdates heartbeat, SQLite integrity ok. 152 local tests,
+100% lines / 98.91% branches overall; network module 100% lines/branches.
+GitHub run 39390128217 passed both required checks. No live publication was sent.
