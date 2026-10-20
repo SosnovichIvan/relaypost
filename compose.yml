@@ -4,6 +4,10 @@ services:
       context: .
       target: bot
     env_file: .env
+    environment:
+      RELAYPOST_LOGIN_BIND: 0.0.0.0
+    ports:
+      - '127.0.0.1:18080:8080'
     restart: unless-stopped
     volumes:
       - relaypost-data:/data

@@ -34,14 +34,27 @@ class Service:
 
     async def add(self, owner: int, account_id: int, external_id: str, story: bool = False) -> None:
         account = self.store.account(owner, account_id)
-        target = await self.gateway.target(account, external_id)
+        target = (
+            await self.gateway.target(account, external_id, story=True)
+            if story and account["platform"] == "telegram-user"
+            else await self.gateway.target(account, external_id)
+        )
         if story:
+            if account["platform"] == "telegram-user":
+                self.store.add_target(owner, account_id, target)
+                return
             if account["platform"] != "vk":
                 raise Rejected("/addstory используется для историй ВК.")
             group = {"group_id": abs(int(external_id))} if int(external_id) < 0 else {}
             await self.gateway.vk(account["token"], "stories.getPhotoUploadServer", **group)
             target["kind"] = "story"
         self.store.add_target(owner, account_id, target)
+
+    async def disconnect(self, owner: int, account_id: int) -> None:
+        account = self.store.account(owner, account_id)
+        if account["platform"] == "telegram-user":
+            await self.gateway.personal().revoke(account)
+        self.store.disconnect(owner, account_id, account["token"])
 
     async def discover(self, owner: int, account_id: int) -> int:
         account = self.store.account(owner, account_id)
@@ -72,7 +85,10 @@ class Service:
             raise Rejected("Назначение недоступно для этого аккаунта или формата.")
         validate_content(content, target["platform"], mode)
         account = self.store.account(owner, target["account_id"])
-        await self.gateway.target(account, target["external_id"])
+        if account["platform"] == "telegram-user":
+            await self.gateway.target(account, target["external_id"], story=mode == "story")
+        else:
+            await self.gateway.target(account, target["external_id"])
         if not self.store.claim_delivery(draft_id, target_id, mode):
             raise Rejected("Публикация уже обработана. Проверьте /status.")
         try:

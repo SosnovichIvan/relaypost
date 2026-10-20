@@ -25,10 +25,29 @@ def test_private_env_generation(tmp_path, monkeypatch):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "bad\nINJECT=1")
     with pytest.raises(ValueError):
         write_env(target)
+
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "100:synthetic_token")
     monkeypatch.setenv("RELAYPOST_ALLOWED_USERS", "1\nINJECT=1")
     with pytest.raises(ValueError):
         write_env(target)
+
+
+def test_private_personal_env_generation(tmp_path, monkeypatch):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "100:synthetic_token")
+    monkeypatch.setenv("RELAYPOST_ENCRYPTION_KEY", Fernet.generate_key().decode())
+    monkeypatch.setenv("TELEGRAM_PROXY_URL", "http://telegram-proxy:19840")
+    monkeypatch.setenv("TELEGRAM_API_ID", "12345")
+    monkeypatch.setenv("TELEGRAM_API_HASH", "a" * 32)
+    monkeypatch.setenv("RELAYPOST_LOGIN_ORIGIN", "https://login.example")
+    target = tmp_path / "personal.env"
+    write_env(target)
+    assert "RELAYPOST_LOGIN_ORIGIN=https://login.example\n" in target.read_text()
+    assert "TELEGRAM_API_ID=12345\n" in target.read_text()
+    target.unlink()
+    monkeypatch.setenv("TELEGRAM_API_HASH", "a" * 32 + "\nINJECT=1")
+    with pytest.raises(Rejected):
+        write_env(target)
+    assert not target.exists()
 
 
 @pytest.mark.parametrize(

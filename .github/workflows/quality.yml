@@ -40,14 +40,46 @@ jobs:
           name: coverage
           path: coverage.json
           if-no-files-found: error
+  login_ui:
+    name: Login UI E2E
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.12.0'
+      - name: Install isolated browser harness
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements-dev.lock
+          npm ci --prefix web-tests --no-audit --no-fund
+      - name: Real HTTPS UI, SQLite and bot adapter to Telegram stub
+        run: npm run --prefix web-tests e2e
+      - name: Browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: login-ui-failures
+          path: web-tests/cypress/screenshots
+          if-no-files-found: ignore
+          retention-days: 7
   gate:
     name: Quality gate
     if: always()
-    needs: [backend]
+    needs: [backend, login_ui]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - name: Require all component checks
         env:
           BACKEND_RESULT: ${{ needs.backend.result }}
-        run: test "$BACKEND_RESULT" = success
+          LOGIN_UI_RESULT: ${{ needs.login_ui.result }}
+        run: |
+          test "$BACKEND_RESULT" = success
+          test "$LOGIN_UI_RESULT" = success

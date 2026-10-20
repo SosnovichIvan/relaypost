@@ -14,3 +14,6 @@ htmlcov/
 .agent-skills-lab/backups/
 
 *.heartbeat
+web-tests/node_modules/
+web-tests/cypress/screenshots/
+web-tests/cypress/videos/

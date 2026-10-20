@@ -139,6 +139,8 @@ def sent_text(stub):
 
 @pytest.fixture(autouse=True)
 def forbid_real_network(monkeypatch, tmp_path):
+    from telethon import TelegramClient
+
     monkeypatch.setenv("RELAYPOST_HEARTBEAT", str(tmp_path / "heartbeat"))
 
     async def deny_async(*args, **kwargs):
@@ -149,3 +151,4 @@ def forbid_real_network(monkeypatch, tmp_path):
 
     monkeypatch.setattr(httpx.AsyncHTTPTransport, "handle_async_request", deny_async)
     monkeypatch.setattr(httpx.HTTPTransport, "handle_request", deny_sync)
+    monkeypatch.setattr(TelegramClient, "connect", deny_async)

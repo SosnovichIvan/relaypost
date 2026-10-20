@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "relaypost"
-version = "0.1.0"
+version = "0.2.0"
 description = "Telegram-first multi-account publishing hub"
 requires-python = ">=3.9"
-dependencies = ["httpx==0.28.1", "cryptography==46.0.3"]
+dependencies = ["httpx==0.28.1", "cryptography==46.0.3", "Telethon==1.45.0", "aiohttp==3.13.5", "qrcode==8.2", "python-socks[asyncio]==3.1.1", "cryptg==0.5.2"]
 
 [project.optional-dependencies]
 dev = ["pytest==8.4.2", "pytest-asyncio==1.2.0", "coverage==7.10.7", "ruff==0.14.1", "mypy==1.18.2"]

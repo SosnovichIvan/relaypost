@@ -42,11 +42,14 @@ services:
       options: {max-size: 10m, max-file: '3'}
   bot:
     image: ${RELAYPOST_IMAGE:?required}
+    ports:
+      - '127.0.0.1:18080:8080'
     env_file:
       - path: ${RELAYPOST_ENV_FILE:?required}
         format: raw
     environment:
       TELEGRAM_PROXY_URL: http://telegram-proxy:19840
+      RELAYPOST_LOGIN_BIND: 0.0.0.0
     depends_on:
       telegram-proxy: {condition: service_healthy}
     restart: unless-stopped

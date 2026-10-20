@@ -1,7 +1,9 @@
 # VPS deployment
 
-Одна production-реплика RelayPost в Docker Compose. Public HTTP ports не нужны:
-бот работает через Telegram long polling. Docker daemon включён в systemd;
+Одна production-реплика RelayPost в Docker Compose. Бот работает через long polling.
+Новый вход в личный Telegram требует отдельного HTTPS origin: приложение доступно
+через loopback 127.0.0.1:18080, перед ним нужен TLS reverse proxy, см. [план](telegram-user.md).
+До задания origin личные сессии отключены. Docker daemon включён в systemd;
 контейнер использует restart=unless-stopped и healthcheck успешного polling.
 Контейнер uid=10001, read-only root filesystem, отдельный writable data bind mount,
 ограничение памяти 512 МБ, no-new-privileges, сброшенные capabilities, ротация логов.
@@ -17,6 +19,12 @@
 | VPS_PASSWORD | SSH password, передаётся sshpass через окружение |
 | VPS_KNOWN_HOSTS | Закреплённый SSH host key; StrictHostKeyChecking=yes |
 | RELAYPOST_ALLOWED_USERS | Опциональный список user ID; пустой = публичный бот |
+| TELEGRAM_API_ID | ID зарегистрированного Telegram API приложения для личных сессий |
+| TELEGRAM_API_HASH | Hash приложения; значение только в Secrets/private env |
+
+Repository Variable `RELAYPOST_LOGIN_ORIGIN` задаёт выделенный HTTPS origin после
+настройки DNS/сертификата и reverse proxy. Без него 0.1.0 продолжает работать через
+прежние подключения. Новые имена Secrets проверяются без раскрытия значений.
 
 Значения не хранятся в Git. Runner пишет credentials в файл mode 0600,
 передаёт по SSH и удаляет файл в always cleanup. Сервер хранит bot.env mode 0600
