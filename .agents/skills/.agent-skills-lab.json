@@ -1,0 +1,79 @@
+{
+  "schema_version": 2,
+  "installer_version": "1.0.0",
+  "agent_adapter": "codex",
+  "skills": {
+    "project-architecture": {
+      "name": "Project Architecture",
+      "description": "Границы системы, контракты, ADR и план реализации/перехода.",
+      "options": [],
+      "option_names": [],
+      "version": "0.1.0",
+      "required_by": [],
+      "installed_at": "2026-10-20T06:58:12.325193+00:00",
+      "content_sha256": "c77a9a4eb08c4ab95a66840366a3385df79aa0eeb66f0a61eafbcf2b5d1e4333"
+    },
+    "backend-engineering": {
+      "name": "Backend Engineering",
+      "description": "Реализация API, domain logic, persistence, безопасности и эксплуатации backend-сервисов.",
+      "options": [
+        "python"
+      ],
+      "option_names": [
+        "Python / FastAPI / Django"
+      ],
+      "version": "0.1.0",
+      "required_by": [],
+      "installed_at": "2026-10-20T06:58:12.325193+00:00",
+      "content_sha256": "a0444dade65616956f40117293a3b6726bdce782944e7e0c0d530c2b8c1254e8"
+    },
+    "database-engineering": {
+      "name": "Database Engineering",
+      "description": "Схемы, SQL, индексы, миграции и backfill реляционных БД.",
+      "options": [
+        "sqlite"
+      ],
+      "option_names": [
+        "SQLite"
+      ],
+      "version": "0.1.0",
+      "required_by": [],
+      "installed_at": "2026-10-20T06:58:12.325193+00:00",
+      "content_sha256": "e8ec202cd81de2e1ad5d8ec4eea9baea6f3523c02cad8a7348704b01723a99dc"
+    },
+    "ci-engineering": {
+      "name": "CI Engineering",
+      "description": "PR-проверки по составу приложений, сервисов и инфраструктуры: тесты, coverage, контракты, миграции и required gates.",
+      "options": [],
+      "option_names": [],
+      "version": "0.1.0",
+      "required_by": [],
+      "installed_at": "2026-10-20T06:58:12.325193+00:00",
+      "content_sha256": "f02eb98bda4e749894aaf5a6e2ea42a91ffdae752ce7866c4be028e4e571bd75"
+    }
+  },
+  "policies": {
+    "project-rules": {
+      "approved_at": "2026-10-20T06:58:12.326542+00:00",
+      "consent": "cli",
+      "rules": {
+        "project-architecture": {
+          "source": "skills/project-architecture/references/project-rules.md",
+          "sha256": "59856f05c7f359a1816e3640ecd595ff117aab225cf85fd456479240f4433783"
+        },
+        "backend-engineering": {
+          "source": "skills/backend-engineering/references/project-rules.md",
+          "sha256": "2ad42dd14ec2ae4fe0c44d6681aaf3a0250992b9cc68b04ab293581071fedb3e"
+        },
+        "database-engineering": {
+          "source": "skills/database-engineering/references/project-rules.md",
+          "sha256": "71cfd33dc4db519f4f016544d3c90708e19b0704a90aa0434990ef573cc3600f"
+        },
+        "delivery": {
+          "source": "agents/rules/delivery.md",
+          "sha256": "827344d88ae35926cdae8ceee09b82e6ffa923e6e6ea10259ee2fadf63347757"
+        }
+      }
+    }
+  }
+}

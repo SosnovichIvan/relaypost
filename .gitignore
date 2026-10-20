@@ -1,0 +1,14 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+*.db*
+.coverage*
+coverage.json
+coverage.xml
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.agent-skills-lab/runtime/
+.agent-skills-lab/backups/
