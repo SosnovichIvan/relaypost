@@ -73,7 +73,7 @@ class Bot:
                 await self.say(owner, f"Опубликовано. ID: {result}. Результаты: /status")
             else:
                 await self.message(owner, message)
-        except (Rejected, ValueError, IndexError) as exc:
+        except (Rejected, ValueError, IndexError, KeyError, TypeError) as exc:
             text = (
                 str(exc)
                 if isinstance(exc, Rejected)

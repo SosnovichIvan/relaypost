@@ -1,5 +1,5 @@
 anyio==4.12.1
-backports.asyncio.runner==1.2.0
+backports.asyncio.runner==1.2.0; python_version < "3.11"
 certifi==2026.10.19
 cffi==2.0.0
 coverage==7.10.7

@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import os
+import signal
 from typing import Optional
 
 import httpx
@@ -54,6 +55,11 @@ async def run() -> None:
         if x.strip()
     )
     store = Store(os.environ.get("RELAYPOST_DATABASE", "relaypost.db"), key)
+    loop = asyncio.get_running_loop()
+    task = asyncio.current_task()
+    previous = signal.getsignal(signal.SIGTERM)
+    if task is not None:
+        loop.add_signal_handler(signal.SIGTERM, task.cancel)
     try:
         async with httpx.AsyncClient(
             timeout=httpx.Timeout(40, connect=10), follow_redirects=False
@@ -63,6 +69,8 @@ async def run() -> None:
             await gateway.tg(token, "deleteWebhook", drop_pending_updates=False)
             await poll(Bot(Service(store, gateway), allowed), asyncio.Event())
     finally:
+        loop.remove_signal_handler(signal.SIGTERM)
+        signal.signal(signal.SIGTERM, previous)
         store.close()
 
 
@@ -76,5 +84,5 @@ def main() -> None:
     except (Rejected, ValueError):
         log.error("Startup failed; check configuration and platform access")
         raise SystemExit(1) from None
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, asyncio.CancelledError):
         pass

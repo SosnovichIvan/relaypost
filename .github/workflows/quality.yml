@@ -25,9 +25,7 @@ jobs:
           BASE_BRANCH: ${{ github.base_ref }}
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
-          if [ "$BASE_BRANCH" = main ] && [ "$HEAD_BRANCH" != develop ]; then
-            exit 1
-          fi
+          .venv/bin/python scripts/check_branch.py
       - name: Lint, types, database and bot integration, coverage
         run: make check
       - name: Coverage

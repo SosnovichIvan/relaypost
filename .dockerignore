@@ -1,0 +1,6 @@
+**
+!Dockerfile
+!requirements.lock
+!relaypost/
+!relaypost/**
+relaypost/__pycache__/

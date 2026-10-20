@@ -14,3 +14,9 @@ UNIQUE, rollback, crash recovery. CI job Backend, обязательный gate 
 Branch policy: feature → develop; develop → main. Ревью обязательно, bypass нет.
 Remote enforcement необходимо проверить отдельно после появления GitHub checks.
 Нагрузка и реальный доступ к площадкам stub-тестами не подтверждаются.
+
+Проверены негативные пороги coverage и направления PR. Первый удалённый run
+39384498521 упал на несовместимом Python-backport в lock и Quality gate также
+упал: failure компонента не скрывается. Lock исправлен environment marker для
+Python <3.11. Docker verify build выполнен локально на Python 3.12 / Linux ARM64.
+Точный актуальный статус CI и branch protection фиксируется после проверки remote.
