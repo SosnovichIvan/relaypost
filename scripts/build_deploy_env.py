@@ -3,6 +3,7 @@
 import os
 import re
 from pathlib import Path
+from urllib.parse import urlsplit
 
 
 def write_env(path: Path) -> None:
@@ -15,6 +16,22 @@ def write_env(path: Path) -> None:
     Fernet(values["RELAYPOST_ENCRYPTION_KEY"].encode())
     if not re.fullmatch(r"(?:\d+(?:,\s*\d+)*)?", values["RELAYPOST_ALLOWED_USERS"]):
         raise ValueError("Malformed user allowlist")
+    proxy = os.environ.get("RELAYPOST_HTTPS_PROXY", "")
+    if proxy:
+        try:
+            parsed = urlsplit(proxy)
+            valid = (
+                parsed.scheme in {"http", "https"}
+                and parsed.hostname
+                and parsed.port
+                and not parsed.fragment
+                and not any(c in proxy for c in "\r\n\x00")
+            )
+        except ValueError:
+            valid = False
+        if not valid:
+            raise ValueError("Malformed HTTPS proxy URL")
+        values["HTTPS_PROXY"] = proxy
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as stream:
         stream.write("\n".join(f"{name}={value}" for name, value in values.items()) + "\n")

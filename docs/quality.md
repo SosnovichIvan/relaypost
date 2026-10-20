@@ -45,3 +45,10 @@ env, отказ на неправильном tag/ref и коммите вне m
 Live VPS deployment/readiness проверяется отдельно в рамках разрешения владельца.
 Автоматический rollback и restore в production не тестируются разрушительными
 экспериментами; для них используется изолированный deployment harness.
+
+Deployment follow-up: 128 tests passed locally, coverage 100% lines / 98.85%
+branches; actionlint 1.7.12 accepts both workflows; production Compose config
+validates with --quiet. The real initial deploy built the image but correctly
+failed its readiness gate and stopped the candidate because Telegram HTTPS
+was unreachable from the VPS. Network diagnostics and current limitations are
+recorded in docs/deployment.md; this is not a passed live delivery check.

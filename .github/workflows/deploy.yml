@@ -57,6 +57,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           RELAYPOST_ENCRYPTION_KEY: ${{ secrets.RELAYPOST_ENCRYPTION_KEY }}
           RELAYPOST_ALLOWED_USERS: ${{ secrets.RELAYPOST_ALLOWED_USERS }}
+          RELAYPOST_HTTPS_PROXY: ${{ secrets.RELAYPOST_HTTPS_PROXY }}
           VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
         run: |
           umask 077

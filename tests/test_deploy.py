@@ -156,3 +156,29 @@ case "$*" in *"ps --quiet bot"*) echo candidate;; esac
         elif log.exists():
             assert "stop bot" not in log.read_text()
     assert b"same-key" not in result.stdout + result.stderr
+
+
+@pytest.mark.parametrize(
+    "proxy,valid",
+    [
+        ("http://user:p%24ss@proxy.example:3128", True),
+        ("https://proxy.example:443", True),
+        ("socks5://proxy.example:1080", False),
+        ("http://proxy.example:invalid", False),
+        ("http://proxy.example:80\nINJECT=1", False),
+        ("http://proxy.example:80#fragment", False),
+    ],
+)
+def test_proxy_environment(tmp_path, monkeypatch, proxy, valid):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "100:synthetic_token")
+    monkeypatch.setenv("RELAYPOST_ENCRYPTION_KEY", Fernet.generate_key().decode())
+    monkeypatch.setenv("RELAYPOST_ALLOWED_USERS", "")
+    monkeypatch.setenv("RELAYPOST_HTTPS_PROXY", proxy)
+    target = tmp_path / "bot.env"
+    if valid:
+        write_env(target)
+        assert "HTTPS_PROXY=" + proxy + "\n" in target.read_text()
+    else:
+        with pytest.raises(ValueError, match="proxy"):
+            write_env(target)
+        assert not target.exists()

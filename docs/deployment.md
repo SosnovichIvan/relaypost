@@ -17,6 +17,7 @@
 | VPS_PASSWORD | SSH password, передаётся sshpass через окружение |
 | VPS_KNOWN_HOSTS | Закреплённый SSH host key; StrictHostKeyChecking=yes |
 | RELAYPOST_ALLOWED_USERS | Опциональный список user ID; пустой = публичный бот |
+| RELAYPOST_HTTPS_PROXY | Опциональный HTTP CONNECT/HTTPS proxy URL для сетей без доступа к Telegram |
 
 Значения не хранятся в Git. Runner пишет credentials в файл mode 0600,
 передаёт по SSH и удаляет файл в always cleanup. Сервер хранит bot.env mode 0600
@@ -77,3 +78,18 @@ docker compose --project-name relaypost --file deploy/compose.yml logs --tail=50
 Не выводить compose config без --quiet: env_file может раскрыть секреты.
 Не выполнять docker inspect целиком: Config.Env содержит токен.
 Использовать точные templates для State/Health, без Env.
+
+## Состояние первичной проверки, 2026-10-20
+
+Docker 29.1.3 и Compose 2.40.3 установлены, image собран, SQLite создана,
+repository Secrets и production/tag policy проверены. Initial deploy не прошёл
+readiness: с хоста и контейнера api.telegram.org:443 недоступен по таймауту,
+как и core.telegram.org; GitHub HTTPS доступен. Проверено несколько адресов
+Telegram, OUTPUT ACCEPT, рабочего global IPv6 нет. Кандидат остановлен
+deploy-скриптом. Успешный запуск не заявляется.
+
+Для завершения нужен доступ со стороны хостера либо выданный владельцем
+прокси. RELAYPOST_HTTPS_PROXY при формировании env превращается в HTTPS_PROXY
+приложения. Произвольные public proxies не используются. TLS verification остаётся
+включённой. Compose env_file format=raw сохраняет специальные символы в URL
+без подстановки переменных. Устранение сети требует повторного readiness check.

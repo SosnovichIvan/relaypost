@@ -1,7 +1,9 @@
 services:
   bot:
     image: ${RELAYPOST_IMAGE:?required}
-    env_file: ${RELAYPOST_ENV_FILE:?required}
+    env_file:
+      - path: ${RELAYPOST_ENV_FILE:?required}
+        format: raw
     restart: unless-stopped
     init: true
     read_only: true
