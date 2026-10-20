@@ -30,7 +30,8 @@ jobs:
         run: make check
       - name: Verify container without platform access
         run: |
-          docker build -t relaypost:verify .
+          docker build --target bot -t relaypost:verify .
+          docker build --target tunnel -t relaypost-tunnel:verify .
           docker run --rm --network none relaypost:verify python -c 'from cryptography.fernet import Fernet; from relaypost.store import Store; import os; s=Store("/data/verify.db", Fernet.generate_key().decode()); assert os.getuid() == 10001; assert s.db.execute("PRAGMA foreign_keys").fetchone()[0] == 1; s.close()'
       - name: Coverage
         if: always()

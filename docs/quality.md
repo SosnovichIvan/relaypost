@@ -52,3 +52,12 @@ validates with --quiet. The real initial deploy built the image but correctly
 failed its readiness gate and stopped the candidate because Telegram HTTPS
 was unreachable from the VPS. Network diagnostics and current limitations are
 recorded in docs/deployment.md; this is not a passed live delivery check.
+
+## Closed Telegram tunnel
+
+Новый runtime network module входит в общий 90% lines/branches gate.
+Infra component telegram-proxy: Dockerfile target=tunnel, Compose secrets без
+published ports, image build в Backend job, SSH+TLS preflight в deploy до остановки
+writers. Unit tests проверяют Telegram-only routing для API/media, запрет fallback,
+закрытие clients и sanitized errors. Deployment harness включает preflight failure.
+Приватные SSH keys не нужны PR tests и не попадают в image/build context.

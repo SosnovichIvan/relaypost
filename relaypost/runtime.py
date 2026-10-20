@@ -6,12 +6,11 @@ import os
 import signal
 from typing import Optional
 
-import httpx
-
 from relaypost.bot import Bot
 from relaypost.domain import Rejected
 from relaypost.gateways import Gateways
 from relaypost.health import clear_readiness, mark_ready
+from relaypost.network import create_client
 from relaypost.service import Service
 from relaypost.store import Store
 
@@ -64,9 +63,7 @@ async def run() -> None:
     if task is not None:
         loop.add_signal_handler(signal.SIGTERM, task.cancel)
     try:
-        async with httpx.AsyncClient(
-            timeout=httpx.Timeout(40, connect=10), follow_redirects=False
-        ) as client:
+        async with create_client(os.environ.get("TELEGRAM_PROXY_URL", "")) as client:
             gateway = Gateways(client, token)
             await gateway.tg(token, "getMe")
             await gateway.tg(token, "deleteWebhook", drop_pending_updates=False)

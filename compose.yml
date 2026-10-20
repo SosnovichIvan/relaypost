@@ -1,6 +1,8 @@
 services:
   bot:
-    build: .
+    build:
+      context: .
+      target: bot
     env_file: .env
     restart: unless-stopped
     volumes:

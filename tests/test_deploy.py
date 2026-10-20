@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 from cryptography.fernet import Fernet
 
+from relaypost.domain import Rejected
 from scripts.build_deploy_env import write_env
 from scripts.check_release import check_release
 
@@ -66,7 +67,7 @@ def test_deploy_shell_syntax():
 
 
 @pytest.mark.parametrize(
-    "scenario", ["success", "readiness-failure", "build-failure", "key-change"]
+    "scenario", ["success", "readiness-failure", "build-failure", "key-change", "preflight-failure"]
 )
 def test_isolated_deploy_and_rollback(tmp_path, scenario):
     import hashlib
@@ -76,6 +77,9 @@ def test_isolated_deploy_and_rollback(tmp_path, scenario):
     root = tmp_path / "vps"
     for name in ["incoming", "releases/1.0.0/deploy", "shared", "data", "backups"]:
         (root / name).mkdir(parents=True, exist_ok=True)
+    (root / "shared/proxy_target").write_text("root@proxy.example")
+    (root / "shared/proxy_ed25519").write_text("synthetic-key")
+    (root / "shared/proxy_known_hosts").write_text("synthetic-known-host")
     (root / "current").symlink_to(root / "releases/1.0.0")
     (root / "releases/1.0.0/deploy/compose.yml").write_text("services: {}")
     previous = "TELEGRAM_BOT_TOKEN=100:old\nRELAYPOST_ENCRYPTION_KEY=same-key\n"
@@ -116,6 +120,7 @@ def test_isolated_deploy_and_rollback(tmp_path, scenario):
     docker.write_text("""#!/bin/sh
 printf '%s %s\\n' "$RELAYPOST_IMAGE" "$*" >> "$DEPLOY_TEST_LOG"
 if [ "$1" = build ] && [ "$DEPLOY_TEST_SCENARIO" = build-failure ]; then exit 2; fi
+if [ "$1" = run ] && [ "$DEPLOY_TEST_SCENARIO" = preflight-failure ]; then exit 3; fi
 if [ "$1" = inspect ]; then
   if [ "$DEPLOY_TEST_SCENARIO" = readiness-failure ]; then echo unhealthy; else echo healthy; fi
 fi
@@ -161,8 +166,8 @@ case "$*" in *"ps --quiet bot"*) echo candidate;; esac
 @pytest.mark.parametrize(
     "proxy,valid",
     [
-        ("http://user:p%24ss@proxy.example:3128", True),
-        ("https://proxy.example:443", True),
+        ("http://user:p%24ss@proxy.example:3128", False),
+        ("http://proxy.example:3128", True),
         ("socks5://proxy.example:1080", False),
         ("http://proxy.example:invalid", False),
         ("http://proxy.example:80\nINJECT=1", False),
@@ -173,12 +178,12 @@ def test_proxy_environment(tmp_path, monkeypatch, proxy, valid):
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "100:synthetic_token")
     monkeypatch.setenv("RELAYPOST_ENCRYPTION_KEY", Fernet.generate_key().decode())
     monkeypatch.setenv("RELAYPOST_ALLOWED_USERS", "")
-    monkeypatch.setenv("RELAYPOST_HTTPS_PROXY", proxy)
+    monkeypatch.setenv("TELEGRAM_PROXY_URL", proxy)
     target = tmp_path / "bot.env"
     if valid:
         write_env(target)
-        assert "HTTPS_PROXY=" + proxy + "\n" in target.read_text()
+        assert "TELEGRAM_PROXY_URL=" + proxy + "\n" in target.read_text()
     else:
-        with pytest.raises(ValueError, match="proxy"):
+        with pytest.raises(Rejected, match="proxy"):
             write_env(target)
         assert not target.exists()

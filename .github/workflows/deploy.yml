@@ -57,13 +57,13 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           RELAYPOST_ENCRYPTION_KEY: ${{ secrets.RELAYPOST_ENCRYPTION_KEY }}
           RELAYPOST_ALLOWED_USERS: ${{ secrets.RELAYPOST_ALLOWED_USERS }}
-          RELAYPOST_HTTPS_PROXY: ${{ secrets.RELAYPOST_HTTPS_PROXY }}
+          TELEGRAM_PROXY_URL: http://telegram-proxy:19840
           VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
         run: |
           umask 077
           git archive --format=tar.gz --output="$RUNNER_TEMP/relaypost.tgz" HEAD Dockerfile requirements.lock relaypost deploy
           export RELAYPOST_ENV_OUTPUT="$RUNNER_TEMP/relaypost.env"
-          python scripts/build_deploy_env.py
+          python -m scripts.build_deploy_env
           printf '%s\n' "$VPS_KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
       - name: Transfer and atomically switch the single poller
         env:
