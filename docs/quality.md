@@ -90,3 +90,18 @@ Verified in the owner's PR #1 UI: all checks passed and the checkbox
 "Merge without waiting for requirements to be met (bypass rules)" is available.
 The generic Review required status can remain until this option is selected.
 CI is outside the bypass ruleset and remains mandatory. No PR was merged.
+
+## Support change
+
+Support enters the same required Backend / Quality gate and line/branch coverage;
+no production credentials or real support messages are used by PR tests.
+Real SQLite v1→v2 tests preserve populated drafts and verify repeat startup,
+constraints, integrity and crash recovery. Mocked bot→service→SQLite→Telegram
+round trips cover intake, private owner replies, replay, rate limit, foreign and
+forwarded parents, pilot allowlist separation, command/cancel behavior, UTF-16
+limits, delivery ambiguity and recipient env validation. actionlint accepts the
+additional deployment secret wiring. Live delivery remains unverified until the
+recipient is configured and a test exchange is authorized.
+
+Local verification: 188 tests, 100% lines / 99.07% branches; support modules have
+100% lines and branches. Ruff format/check, strict mypy and actionlint pass.

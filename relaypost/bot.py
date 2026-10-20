@@ -4,6 +4,8 @@ from typing import Any
 
 from relaypost.domain import Rejected
 from relaypost.service import Service
+from relaypost.support import Support
+from relaypost.support_store import SupportStore
 
 HELP = """RelayPost — публикации в Telegram, MAX и ВК.
 
@@ -17,6 +19,7 @@ HELP = """RelayPost — публикации в Telegram, MAX и ВК.
 /targets — назначения; /discover ID — найти до 20 площадок MAX/ВК;
 /status — результаты;
 /disconnect ID — удалить подключение; /cancel — помощь.
+/support — обратиться в техподдержку (текст, имя и ID получит команда поддержки).
 
 Истории Telegram: подключите RelayPost в настройках бизнес-аккаунта,
 разрешив управление историями. Подключение появится автоматически.
@@ -25,11 +28,17 @@ MAX и ВК: тексты, фото, видео. /addstory ID_АККАУНТА I
 
 
 class Bot:
-    def __init__(self, service: Service, allowed_users: frozenset[int] = frozenset()):
+    def __init__(
+        self,
+        service: Service,
+        allowed_users: frozenset[int] = frozenset(),
+        support_chat_id: int = 0,
+    ):
         self.service = service
         self.gateway = service.gateway
         self.store = service.store
         self.allowed_users = allowed_users
+        self.support = Support(SupportStore(self.store.db), self.gateway, support_chat_id)
 
     async def say(self, owner: int, text: str, **payload: Any) -> None:
         await self.gateway.tg(
@@ -52,16 +61,26 @@ class Bot:
             actor = message.get("from", {})
         else:
             return
-        if not message or message.get("chat", {}).get("type") != "private" or actor.get("is_bot"):
+        if (
+            not message
+            or message.get("chat", {}).get("type") != "private"
+            or actor.get("is_bot")
+            or message.get("sender_chat")
+        ):
             return
         owner = actor.get("id")
         if not isinstance(owner, int) or owner != message["chat"]["id"]:
             return
-        if self.allowed_users and owner not in self.allowed_users:
+        restricted = bool(self.allowed_users and owner not in self.allowed_users)
+        if restricted and owner != self.support.recipient:
             return
         if not self.store.claim_update(update["update_id"]):
             return
         try:
+            if restricted:
+                if callback is None:
+                    await self.support.handle(owner, message)
+                return
             if callback is not None:
                 await self.gateway.tg(
                     self.gateway.bot_token, "answerCallbackQuery", callback_query_id=callback["id"]
@@ -82,6 +101,8 @@ class Bot:
             await self.say(owner, text)
 
     async def message(self, owner: int, message: dict[str, Any]) -> None:
+        if await self.support.handle(owner, message):
+            return
         text = message.get("text", "")
         if text.startswith("/"):
             parts = text.split()
