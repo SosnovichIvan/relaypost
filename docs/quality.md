@@ -11,7 +11,7 @@
 Бот contract/integration: настоящий dispatcher → service → SQLite → HTTP stub.
 Проверки схемы: empty create, repeated upgrade populated DB, foreign keys,
 UNIQUE, rollback, crash recovery. CI job Backend, обязательный gate Quality gate.
-Branch policy: feature → develop; develop → main. Ревью обязательно, bypass нет.
+Branch policy: feature → develop; develop → main. Reviews follow the owner exception below.
 Remote enforcement необходимо проверить отдельно после появления GitHub checks.
 Нагрузка и реальный доступ к площадкам stub-тестами не подтверждаются.
 
@@ -22,7 +22,7 @@ Python <3.11. Docker verify build выполнен локально на Python 
 Remote enforcement: **verified**, 2026-10-20. Обе ветки перечитаны после PUT:
 strict Quality gate от GitHub Actions app 15368, enforce_admins=true, review=1,
 last-push approval, dismiss stale reviews, conversations resolved,
-force-push/delete=false, bypass отсутствует. Декларация: `.github/branch-protection.json`.
+force-push/delete=false; initially no bypass. Current owner exception is documented below.
 Реальный run [39384653090](https://github.com/SosnovichIvan/relaypost/actions/runs/39384653090)
 прошёл Backend и Quality gate на af56b2d. Прямой push в защищённые ветки
 не выполнялся; запрет подтверждён конфигурацией GitHub API, а не такой попыткой.
@@ -67,3 +67,26 @@ bot+tunnel healthy / zero restarts, actual getMe via the mounted Telegram
 transport, fresh getUpdates heartbeat, SQLite integrity ok. 152 local tests,
 100% lines / 98.91% branches overall; network module 100% lines/branches.
 GitHub run 39390128217 passed both required checks. No live publication was sent.
+
+## Owner merge exception
+
+Explicit owner instruction, 2026-10-20: SosnovichIvan can merge their own and other
+contributors' PRs without another person's approval. GitHub rejected classic
+per-user allowances on this personal repository (422: organization repositories
+only). Reviews now use active ruleset 25461411 for main and develop, declared in
+`.github/review-ruleset.json`. Admin RepositoryRole 5 has bypass_mode=pull_request;
+SosnovichIvan is the only current admin. Reassess this exception if admins change.
+Other contributors still require one approval, stale review dismissal and approval
+of the latest push by another person.
+
+Classic protection remains separate: strict Quality gate from Actions app 15368,
+enforce_admins=true, conversation resolution and force-push/deletion bans.
+`.github/branch-protection.json` sets required_pull_request_reviews=null because
+the ruleset owns reviews. Apply both declarations together. Both branches and the
+ruleset were read back after applying through GitHub API.
+
+The owner must still use a PR ([GitHub ruleset bypass documentation](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository)).
+Verified in the owner's PR #1 UI: all checks passed and the checkbox
+"Merge without waiting for requirements to be met (bypass rules)" is available.
+The generic Review required status can remain until this option is selected.
+CI is outside the bypass ruleset and remains mandatory. No PR was merged.

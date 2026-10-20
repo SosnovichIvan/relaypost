@@ -1,5 +1,17 @@
 # Agent instructions
 
+## Owner merge policy (explicit instruction, 2026-10-20)
+
+SosnovichIvan may merge their own and other contributors' PRs into develop and
+main without another person's approval. This overrides the generic no-admin-bypass
+policy in the approved snapshots below. Quality gate remains mandatory for everyone,
+including the owner. Keep strict checks, conversation resolution and force-push /
+deletion bans. Apply both `.github/branch-protection.json` (CI, enforce_admins=true)
+and `.github/review-ruleset.json` (reviews, admin bypass only through PRs).
+The only current admin is SosnovichIvan; reassess the exception if admins change.
+Do not restore mandatory third-party approval for the owner during synchronization.
+The null classic required_pull_request_reviews moves reviews to the ruleset.
+
 <!-- agent-skills-lab:skills:start -->
 ## Installed agent skills
 
