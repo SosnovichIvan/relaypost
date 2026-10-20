@@ -1,0 +1,77 @@
+services:
+  telegram-proxy:
+    image: ${RELAYPOST_TUNNEL_IMAGE:?required}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    pids_limit: 64
+    command:
+      - -NT
+      - -i
+      - /run/secrets/proxy_ssh_key
+      - -o
+      - IdentitiesOnly=yes
+      - -o
+      - BatchMode=yes
+      - -o
+      - ConnectTimeout=10
+      - -o
+      - StrictHostKeyChecking=yes
+      - -o
+      - UserKnownHostsFile=/run/secrets/proxy_known_hosts
+      - -o
+      - ExitOnForwardFailure=yes
+      - -o
+      - ServerAliveInterval=30
+      - -o
+      - ServerAliveCountMax=3
+      - -L
+      - 0.0.0.0:19840:10.66.66.1:3128
+      - ${RELAYPOST_PROXY_SSH_TARGET:?required}
+    secrets: [proxy_ssh_key, proxy_known_hosts]
+    healthcheck:
+      test: [CMD, nc, -z, 127.0.0.1, '19840']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: '3'}
+  bot:
+    image: ${RELAYPOST_IMAGE:?required}
+    env_file:
+      - path: ${RELAYPOST_ENV_FILE:?required}
+        format: raw
+    environment:
+      TELEGRAM_PROXY_URL: http://telegram-proxy:19840
+    depends_on:
+      telegram-proxy: {condition: service_healthy}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777,noexec,nosuid
+    volumes:
+      - ${RELAYPOST_DATA_DIR:?required}:/data
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 512m
+    stop_grace_period: 45s
+    healthcheck:
+      test: [CMD, python, -m, relaypost.health]
+      interval: 15s
+      timeout: 5s
+      start_period: 45s
+      retries: 3
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: '3'}
+secrets:
+  proxy_ssh_key:
+    file: ${RELAYPOST_PROXY_KEY_FILE:?required}
+  proxy_known_hosts:
+    file: ${RELAYPOST_PROXY_KNOWN_HOSTS_FILE:?required}

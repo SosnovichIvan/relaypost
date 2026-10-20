@@ -1,0 +1,53 @@
+name: Quality
+on:
+  pull_request:
+    branches: [main, develop]
+permissions:
+  contents: read
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install locked dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements-dev.lock
+      - name: Validate branch flow
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: |
+          .venv/bin/python scripts/check_branch.py
+      - name: Lint, types, database and bot integration, coverage
+        run: make check
+      - name: Verify container without platform access
+        run: |
+          docker build --target bot -t relaypost:verify .
+          docker build --target tunnel -t relaypost-tunnel:verify .
+          docker run --rm --network none relaypost:verify python -c 'from cryptography.fernet import Fernet; from relaypost.store import Store; import os; s=Store("/data/verify.db", Fernet.generate_key().decode()); assert os.getuid() == 10001; assert s.db.execute("PRAGMA foreign_keys").fetchone()[0] == 1; s.close()'
+      - name: Coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.json
+          if-no-files-found: error
+  gate:
+    name: Quality gate
+    if: always()
+    needs: [backend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require all component checks
+        env:
+          BACKEND_RESULT: ${{ needs.backend.result }}
+        run: test "$BACKEND_RESULT" = success

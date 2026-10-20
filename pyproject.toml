@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "relaypost"
+version = "0.1.0"
+description = "Telegram-first multi-account publishing hub"
+requires-python = ">=3.9"
+dependencies = ["httpx==0.28.1", "cryptography==46.0.3"]
+
+[project.optional-dependencies]
+dev = ["pytest==8.4.2", "pytest-asyncio==1.2.0", "coverage==7.10.7", "ruff==0.14.1", "mypy==1.18.2"]
+
+[tool.setuptools.packages.find]
+include = ["relaypost*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S"]
+ignore = ["S101"]
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+
+[tool.coverage.run]
+branch = true
+source = ["relaypost"]
+
+[tool.coverage.report]
+show_missing = true
