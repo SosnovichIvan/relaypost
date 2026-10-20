@@ -1,0 +1,10 @@
+services:
+  bot:
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - relaypost-data:/data
+    stop_grace_period: 15s
+volumes:
+  relaypost-data:
