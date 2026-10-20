@@ -111,7 +111,8 @@ Coverage измеряет все файлы `relaypost/`, отдельно не 
 [Правила агента](AGENTS.md) · [Эксплуатация](docs/operations.md).
 Скиллы и профильные правила установлены из локального Agent Skills Lab.
 Рабочая ветка → PR в `develop` → PR из `develop` в `main`; без прямых push.
-Релизный/deploy workflow пока не добавлен: CI ничего не публикует.
+Production deploy: push тега `MAJOR.MINOR.PATCH` на коммите из `main`;
+PR-проверки ничего не публикуют. [Пайплайн и VPS](docs/deployment.md).
 
 ## Источники API
 

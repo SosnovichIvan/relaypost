@@ -11,6 +11,7 @@ import httpx
 from relaypost.bot import Bot
 from relaypost.domain import Rejected
 from relaypost.gateways import Gateways
+from relaypost.health import clear_readiness, mark_ready
 from relaypost.service import Service
 from relaypost.store import Store
 
@@ -29,6 +30,7 @@ async def poll(bot: Bot, stop: asyncio.Event) -> None:
                 limit=20,
                 allowed_updates=["message", "callback_query", "business_connection"],
             )
+            mark_ready()
             for update in updates:
                 try:
                     await bot.handle(update)
@@ -54,6 +56,7 @@ async def run() -> None:
         for x in os.environ.get("RELAYPOST_ALLOWED_USERS", "").split(",")
         if x.strip()
     )
+    clear_readiness()
     store = Store(os.environ.get("RELAYPOST_DATABASE", "relaypost.db"), key)
     loop = asyncio.get_running_loop()
     task = asyncio.current_task()
@@ -71,6 +74,7 @@ async def run() -> None:
     finally:
         loop.remove_signal_handler(signal.SIGTERM)
         signal.signal(signal.SIGTERM, previous)
+        clear_readiness()
         store.close()
 
 

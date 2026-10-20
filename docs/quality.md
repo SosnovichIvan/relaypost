@@ -34,3 +34,14 @@ Docker build, запуск non-root с SQLite migration и `docker compose confi
 Релизы N/A: release workflow отсутствует, CI ничего не публикует.
 Живая доставка остаётся **gap до подключения тестовых аккаунтов**, проверка
 производительности **gap до определения нагрузки**; stub suite их не заменяет.
+
+## Deployment change
+
+Runtime readiness входит в общую suite relaypost/ и пороги покрытия.
+CI дополнительно проверяет shell syntax deploy/deploy.sh, приватное формирование
+env, отказ на неправильном tag/ref и коммите вне main. Production workflow
+самостоятельно повторяет make check до доступа к секретам; PR workflow
+не имеет доступа к VPS. Compose не публикует HTTP ports.
+Live VPS deployment/readiness проверяется отдельно в рамках разрешения владельца.
+Автоматический rollback и restore в production не тестируются разрушительными
+экспериментами; для них используется изолированный deployment harness.

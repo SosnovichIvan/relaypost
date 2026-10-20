@@ -1,0 +1,27 @@
+services:
+  bot:
+    image: ${RELAYPOST_IMAGE:?required}
+    env_file: ${RELAYPOST_ENV_FILE:?required}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777,noexec,nosuid
+    volumes:
+      - ${RELAYPOST_DATA_DIR:?required}:/data
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 512m
+    stop_grace_period: 45s
+    healthcheck:
+      test: [CMD, python, -m, relaypost.health]
+      interval: 15s
+      timeout: 5s
+      start_period: 45s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'

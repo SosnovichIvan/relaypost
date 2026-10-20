@@ -138,7 +138,9 @@ def sent_text(stub):
 
 
 @pytest.fixture(autouse=True)
-def forbid_real_network(monkeypatch):
+def forbid_real_network(monkeypatch, tmp_path):
+    monkeypatch.setenv("RELAYPOST_HEARTBEAT", str(tmp_path / "heartbeat"))
+
     async def deny_async(*args, **kwargs):
         raise AssertionError("Live network forbidden in tests")
 
