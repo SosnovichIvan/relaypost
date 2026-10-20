@@ -12,3 +12,5 @@ htmlcov/
 .mypy_cache/
 .agent-skills-lab/runtime/
 .agent-skills-lab/backups/
+
+*.heartbeat
