@@ -12,6 +12,10 @@ class Uncertain(Rejected):
 
 
 def formats(platform: str, kind: str, media: str) -> list[str]:
+    if platform == "telegram-user":
+        if kind == "user-story":
+            return ["story"] if media in {"photo", "video"} else []
+        return ["post" if kind == "channel" else "message"]
     if platform == "telegram-business":
         return ["story"] if kind == "business" and media in {"photo", "video"} else []
     if platform == "telegram":
@@ -24,10 +28,21 @@ def formats(platform: str, kind: str, media: str) -> list[str]:
 
 
 def validate_content(content: dict[str, Any], platform: str, mode: str) -> None:
+    if (
+        platform == "telegram-user"
+        and content["media"] == "video"
+        and any(
+            not isinstance(content.get(key), (int, float)) or content[key] <= 0
+            for key in ("duration", "width", "height")
+        )
+    ):
+        raise Rejected("У видео отсутствуют длительность или размеры. Отправьте видео заново.")
     # Conservative common limit for captions; Telegram counts UTF-16 units.
     text = content["text"]
     limit = (
-        1000 if content["media"] != "text" else {"telegram": 4096, "max": 4000}.get(platform, 16000)
+        1000
+        if content["media"] != "text"
+        else {"telegram": 4096, "telegram-user": 4096, "max": 4000}.get(platform, 16000)
     )
     if len(text.encode("utf-16-le")) // 2 > limit:
         raise Rejected(f"Слишком длинный текст: максимум {limit} символов.")

@@ -10,7 +10,7 @@ concurrency:
 jobs:
   verify:
     name: Verify release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -29,6 +29,13 @@ jobs:
           python -m venv .venv
           .venv/bin/python -m pip install -r requirements-dev.lock
           make check
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.12.0'
+      - name: Browser acceptance before production secrets
+        run: |
+          npm ci --prefix web-tests --no-audit --no-fund
+          npm run --prefix web-tests e2e
   deploy:
     name: Deploy VPS
     needs: verify
@@ -57,6 +64,9 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           RELAYPOST_ENCRYPTION_KEY: ${{ secrets.RELAYPOST_ENCRYPTION_KEY }}
           RELAYPOST_ALLOWED_USERS: ${{ secrets.RELAYPOST_ALLOWED_USERS }}
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+          RELAYPOST_LOGIN_ORIGIN: ${{ vars.RELAYPOST_LOGIN_ORIGIN }}
           TELEGRAM_PROXY_URL: http://telegram-proxy:19840
           VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
         run: |
