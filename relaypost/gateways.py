@@ -2,18 +2,27 @@
 
 import json
 import re
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
 from relaypost.domain import Rejected, Uncertain
+from relaypost.telegram_user import TelegramUsers
 from relaypost.uploads import upload
 
 
 class Gateways:
-    def __init__(self, client: httpx.AsyncClient, bot_token: str):
+    def __init__(
+        self, client: httpx.AsyncClient, bot_token: str, users: Optional[TelegramUsers] = None
+    ):
         self.client = client
         self.bot_token = bot_token
+        self.users = users
+
+    def personal(self) -> TelegramUsers:
+        if self.users is None:
+            raise Rejected("Вход в личный Telegram-аккаунт пока не настроен.")
+        return self.users
 
     async def request(self, method: str, url: str, *, write: bool = False, **kwargs: Any) -> Any:
         try:
@@ -70,8 +79,14 @@ class Gateways:
             return {"id": data["id"], "label": data["first_name"] + " " + data["last_name"]}
         raise Rejected("Поддерживаются telegram, max, vk.")
 
-    async def target(self, account: dict[str, Any], external_id: str) -> dict[str, Any]:
+    async def target(
+        self, account: dict[str, Any], external_id: str, *, story: bool = False
+    ) -> dict[str, Any]:
         token, platform = account["token"], account["platform"]
+        if platform not in {"telegram-user", "telegram-business", "telegram", "max", "vk"}:
+            raise Rejected("Неподдерживаемый тип подключения.")
+        if platform == "telegram-user":
+            return await self.personal().target(account, external_id, story=story)
         if platform == "telegram-business":
             data = await self.tg(
                 self.bot_token, "getBusinessConnection", business_connection_id=token
@@ -124,6 +139,8 @@ class Gateways:
         return {"id": external_id, "kind": "wall", "label": group["name"]}
 
     async def discover(self, account: dict[str, Any]) -> list[str]:
+        if account["platform"] == "telegram-user":
+            return await self.personal().discover(account)
         platform, token = account["platform"], account["token"]
         if platform == "max":
             data = await self.request(
@@ -169,6 +186,13 @@ class Gateways:
         delivery_key: str,
     ) -> str:
         token, platform = account["token"], account["platform"]
+        if platform not in {"telegram-user", "telegram-business", "telegram", "max", "vk"}:
+            raise Rejected("Неподдерживаемый тип подключения.")
+        if platform == "telegram-user":
+            media = await self.media(content["file_id"]) if content["media"] != "text" else b""
+            return await self.personal().publish(
+                account, target, content, mode, delivery_key, media
+            )
         if platform in {"telegram", "telegram-business"}:
             if content["media"] == "text":
                 data = await self.tg(

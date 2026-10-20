@@ -1,0 +1,25 @@
+# Replace AUTH_DOMAIN and install a valid certificate before enabling this vhost.
+# This is an HTTPS-only authorization origin, not a general-purpose bot frontend.
+server {
+    listen 443 ssl;
+    server_name AUTH_DOMAIN;
+    ssl_certificate /etc/letsencrypt/live/AUTH_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/AUTH_DOMAIN/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    client_max_body_size 4k;
+    # Login URLs are short-lived bearer credentials. Never record them.
+    access_log off;
+    error_log /dev/null;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    location /login/ {
+        proxy_pass http://127.0.0.1:18080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_request_buffering off;
+        proxy_buffering off;
+        proxy_max_temp_file_size 0;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 90s;
+    }
+    location / { return 404; }
+}

@@ -1,6 +1,6 @@
 PYTHON ?= .venv/bin/python
 
-.PHONY: check test run
+.PHONY: check test run e2e
 check:
 	$(PYTHON) -m ruff format --check relaypost tests scripts
 	$(PYTHON) -m ruff check relaypost tests scripts
@@ -15,3 +15,6 @@ test:
 
 run:
 	$(PYTHON) -m relaypost
+
+e2e:
+	npm run --prefix web-tests e2e
