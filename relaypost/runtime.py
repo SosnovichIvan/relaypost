@@ -13,6 +13,7 @@ from relaypost.health import clear_readiness, mark_ready
 from relaypost.network import create_client
 from relaypost.service import Service
 from relaypost.store import Store
+from relaypost.support import support_recipient
 
 log = logging.getLogger("relaypost")
 
@@ -55,6 +56,7 @@ async def run() -> None:
         for x in os.environ.get("RELAYPOST_ALLOWED_USERS", "").split(",")
         if x.strip()
     )
+    support_id = support_recipient(os.environ.get("SUPPORT_CHAT_ID", "0"))
     clear_readiness()
     store = Store(os.environ.get("RELAYPOST_DATABASE", "relaypost.db"), key)
     loop = asyncio.get_running_loop()
@@ -67,7 +69,19 @@ async def run() -> None:
             gateway = Gateways(client, token)
             await gateway.tg(token, "getMe")
             await gateway.tg(token, "deleteWebhook", drop_pending_updates=False)
-            await poll(Bot(Service(store, gateway), allowed), asyncio.Event())
+            await gateway.tg(
+                token,
+                "setMyCommands",
+                commands=[
+                    {"command": "start", "description": "Помощь и подключение площадок"},
+                    {"command": "accounts", "description": "Мои подключения"},
+                    {"command": "targets", "description": "Куда можно публиковать"},
+                    {"command": "status", "description": "Результаты публикаций"},
+                    {"command": "support", "description": "Техподдержка"},
+                    {"command": "cancel", "description": "Отмена"},
+                ],
+            )
+            await poll(Bot(Service(store, gateway), allowed, support_id), asyncio.Event())
     finally:
         loop.remove_signal_handler(signal.SIGTERM)
         signal.signal(signal.SIGTERM, previous)

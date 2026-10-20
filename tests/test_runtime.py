@@ -99,15 +99,18 @@ async def test_run_lifecycle(monkeypatch, tmp_path):
     monkeypatch.setenv("RELAYPOST_ENCRYPTION_KEY", Fernet.generate_key().decode())
     monkeypatch.setenv("RELAYPOST_DATABASE", str(tmp_path / "run.db"))
     monkeypatch.setenv("RELAYPOST_ALLOWED_USERS", "1, 2,")
+    monkeypatch.setenv("SUPPORT_CHAT_ID", "99")
     monkeypatch.setattr(httpx, "AsyncClient", lambda **kwargs: client)
 
     async def stop(bot, event):
         assert bot.allowed_users == frozenset({1, 2})
+        assert bot.support.recipient == 99
 
     monkeypatch.setattr(runtime, "poll", stop)
     await runtime.run()
     assert client.is_closed
     assert stub.counts["deleteWebhook"] == 1
+    assert stub.counts["setMyCommands"] == 1
 
 
 def test_module_entrypoint(monkeypatch):

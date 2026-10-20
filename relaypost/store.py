@@ -47,11 +47,16 @@ class Store:
         version = self.db.execute("PRAGMA user_version").fetchone()[0]
         if version == 0:
             self.db.executescript("BEGIN;" + SCHEMA + "COMMIT;")
-        elif version != 1:
+        elif version not in {1, 2}:
             self.db.close()
             raise Rejected("Неподдерживаемая версия БД.")
+        if version in {0, 1}:
+            from relaypost.support_store import SCHEMA_V2
+
+            self.db.executescript("BEGIN;" + SCHEMA_V2 + "COMMIT;")
         with self.db:
             self.db.execute("UPDATE deliveries SET state='unknown' WHERE state='sending'")
+            self.db.execute("UPDATE support_messages SET state='unknown' WHERE state='sending'")
 
     def close(self) -> None:
         self.db.close()
